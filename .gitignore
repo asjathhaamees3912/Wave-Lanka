@@ -1,0 +1,48 @@
+# Dependency directories
+node_modules/
+wavelanka/frontend/node_modules/
+wavelanka/backend/node_modules/
+
+# Python Virtual Environments
+.venv/
+.venv_root/
+venv/
+env/
+wavelanka/AI/.venv/
+
+# Next.js Build files
+.next/
+wavelanka/frontend/.next/
+build/
+dist/
+out/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+wavelanka/AI/.env
+wavelanka/backend/.env
+
+# Python Caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# System / IDE files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.gemini/
+.antigravityignore
+
+# Logs and DB files
+*.log
+wavelanka/AI/*.log
+*.sqlite
+*.db

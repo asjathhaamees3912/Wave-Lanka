@@ -1,0 +1,15 @@
+[
+  "wave_height",
+  "wave_period",
+  "wind_wave_height",
+  "swell_wave_height",
+  "swell_wave_period",
+  "wind_speed_10m",
+  "wind_gusts_10m",
+  "weather_code",
+  "month",
+  "zone_id",
+  "wave_wind_ratio",
+  "swell_steepness"
+]
+

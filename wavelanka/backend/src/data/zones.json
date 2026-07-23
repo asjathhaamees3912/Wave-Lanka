@@ -1,0 +1,32 @@
+[
+  {
+    "id": "bay-of-bengal",
+    "name": "Bay of Bengal (East)",
+    "lat": 8.5,
+    "lon": 81.2
+  },
+  {
+    "id": "indian-ocean",
+    "name": "Indian Ocean (South)",
+    "lat": 5.9,
+    "lon": 80.5
+  },
+  {
+    "id": "gulf-of-mannar",
+    "name": "Gulf of Mannar (West)",
+    "lat": 8.9,
+    "lon": 79.9
+  },
+  {
+    "id": "palk-strait",
+    "name": "Palk Strait (North)",
+    "lat": 9.8,
+    "lon": 80.1
+  },
+  {
+    "id": "lakshadweep-sea",
+    "name": "Lakshadweep Sea (SW)",
+    "lat": 6.9,
+    "lon": 79.8
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "levels": [
+    {
+      "level": "DO NOT GO",
+      "priority": 4,
+      "wave_height": { "min": 3.5, "max": null, "unit": "m" },
+      "wind_speed": { "min": 50, "max": null, "unit": "km/h" },
+      "description": "Extreme conditions — do not venture to sea."
+    },
+    {
+      "level": "DANGEROUS",
+      "priority": 3,
+      "wave_height": { "min": 2.0, "max": 3.5, "unit": "m" },
+      "wind_speed": { "min": 35, "max": 50, "unit": "km/h" },
+      "description": "Hazardous conditions for small vessels."
+    },
+    {
+      "level": "CAUTION",
+      "priority": 2,
+      "wave_height": { "min": 1.0, "max": 2.0, "unit": "m" },
+      "wind_speed": { "min": 20, "max": 35, "unit": "km/h" },
+      "description": "Proceed with caution — experienced crews only."
+    },
+    {
+      "level": "SAFE",
+      "priority": 1,
+      "wave_height": { "min": null, "max": 1.0, "unit": "m" },
+      "wind_speed": { "min": null, "max": 20, "unit": "km/h" },
+      "description": "Conditions within safe operating limits."
+    }
+  ],
+  "safeWindow": {
+    "max_wave_height": 1.0,
+    "max_wind_speed": 20,
+    "min_duration_hours": 3
+  }
+}
