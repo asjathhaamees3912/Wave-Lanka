@@ -152,6 +152,11 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+async def root() -> Dict[str, str]:
+    return {"message": "Wave Lanka AI Service is running"}
+
+
 @app.get("/health")
 async def health() -> Dict[str, Any]:
     return {
