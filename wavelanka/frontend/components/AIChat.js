@@ -96,7 +96,7 @@ export default function AIChat({ selectedZoneName }) {
     setMessages([defaultWelcomeMessage()]);
 
     try {
-      await axios.post(`http://localhost:8000/chat/clear`, null, {
+      await axios.post(`${process.env.NEXT_PUBLIC_AI_URL || "http://localhost:8000"}/chat/clear`, null, {
         params: { session_id: newId },
         timeout: 5000,
       });

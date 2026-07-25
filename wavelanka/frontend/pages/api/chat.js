@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const AI_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
-const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const AI_URL = process.env.NEXT_PUBLIC_AI_URL || "http://localhost:8000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
 const ZONE_KEYWORDS = [
   { zone: "east", keywords: ["trincom", "batticaloa", "bengal", "east coast", "kalmunai", "ampara", "arugam", "nilaveli"] },

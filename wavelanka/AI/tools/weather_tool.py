@@ -4,7 +4,7 @@ from typing import Any, Dict
 import requests
 
 
-BACKEND_BASE_URL = os.getenv("WAVELANKA_BACKEND_URL", "http://localhost:5000")
+BACKEND_BASE_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
 
 
 # same alias mapping as marine tool (keep in sync)

@@ -4,8 +4,8 @@ from typing import Any, Dict
 import requests
 
 
-BACKEND_BASE_URL = os.getenv("WAVELANKA_BACKEND_URL", "http://localhost:5000")
-AI_BASE_URL = os.getenv("WAVELANKA_AI_URL", "http://localhost:8000")
+BACKEND_BASE_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
+AI_BASE_URL = os.getenv("AI_BASE_URL", "http://localhost:8000")
 
 
 # Map friendly short zone keys to backend zone ids

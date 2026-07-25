@@ -103,7 +103,7 @@ export default function ChatPage() {
     setIsTyping(false);
     setShowSettings(false);
     try {
-      axios.post('http://localhost:8000/chat/clear', null, { params: { session_id: sessionId }, timeout: 4000 });
+      axios.post(`${process.env.NEXT_PUBLIC_AI_URL || 'http://localhost:8000'}/chat/clear`, null, { params: { session_id: sessionId }, timeout: 4000 });
     } catch (e) { /* best-effort */ }
   };
 
