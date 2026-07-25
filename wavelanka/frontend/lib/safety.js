@@ -53,8 +53,17 @@ export function computeSafety(waveHeight, windSpeed) {
 
 // Attempt ML predict first, fallback to backend rule-based safety
 export async function getSafetyVerdict(zoneId) {
-  const AI_URL = process.env.NEXT_PUBLIC_AI_URL || "http://localhost:8000";
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  const cleanUrl = (url) => {
+    if (!url) return "";
+    let cleaned = url.replace(/['"]/g, "").trim();
+    if (cleaned && !cleaned.startsWith("http://") && !cleaned.startsWith("https://")) {
+      cleaned = "https://" + cleaned;
+    }
+    return cleaned;
+  };
+
+  const AI_URL = cleanUrl(process.env.NEXT_PUBLIC_AI_URL) || "http://localhost:8000";
+  const BACKEND_URL = cleanUrl(process.env.NEXT_PUBLIC_BACKEND_URL) || "http://localhost:5000";
 
   // helper to normalize ML safety class to UI label
   const normalizeLevel = (safetyClass) => {

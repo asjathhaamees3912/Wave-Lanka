@@ -4,8 +4,16 @@ from typing import Any, Dict
 import requests
 
 
-BACKEND_BASE_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
-AI_BASE_URL = os.getenv("AI_BASE_URL", "http://localhost:8000")
+def clean_url(url: str | None) -> str:
+    if not url:
+        return ""
+    cleaned = url.replace("'", "").replace('"', '').strip()
+    if cleaned and not cleaned.startswith("http://") and not cleaned.startswith("https://"):
+        cleaned = "https://" + cleaned
+    return cleaned
+
+BACKEND_BASE_URL = clean_url(os.getenv("BACKEND_URL", "http://localhost:5000"))
+AI_BASE_URL = clean_url(os.getenv("AI_BASE_URL", "http://localhost:8000"))
 
 
 # Map friendly short zone keys to backend zone ids

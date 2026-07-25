@@ -29,8 +29,17 @@ export default function SearchPage() {
   const [safetyByZoneId, setSafetyByZoneId] = useState({});
   const zoneChipsRef = useRef(null);
 
+  const cleanUrl = (url) => {
+    if (!url) return "";
+    let cleaned = url.replace(/['"]/g, "").trim();
+    if (cleaned && !cleaned.startsWith("http://") && !cleaned.startsWith("https://")) {
+      cleaned = "https://" + cleaned;
+    }
+    return cleaned;
+  };
+
   const backendBase =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+    cleanUrl(process.env.NEXT_PUBLIC_BACKEND_URL) || "http://localhost:5000";
 
   const fuse = useMemo(() => new Fuse(TOWN_LIST, FUSE_OPTIONS), []);
 

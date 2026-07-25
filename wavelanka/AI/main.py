@@ -49,7 +49,15 @@ MODEL_12H_PATH = MARINE_MODEL_DIR / "model_12h.joblib"
 MODEL_24H_PATH = MARINE_MODEL_DIR / "model_24h.joblib"
 FORECAST_FEATURES_PATH = MARINE_MODEL_DIR / "forecast_features.json"
 
-BACKEND_BASE_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
+def clean_url(url: str | None) -> str:
+    if not url:
+        return ""
+    cleaned = url.replace("'", "").replace('"', '').strip()
+    if cleaned and not cleaned.startswith("http://") and not cleaned.startswith("https://"):
+        cleaned = "https://" + cleaned
+    return cleaned
+
+BACKEND_BASE_URL = clean_url(os.getenv("BACKEND_URL", "http://localhost:5000"))
 
 CLASS_NAMES = ["SAFE", "CAUTION", "DANGEROUS", "DO_NOT_GO"]
 

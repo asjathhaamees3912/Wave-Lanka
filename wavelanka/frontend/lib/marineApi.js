@@ -1,7 +1,16 @@
 import axios from "axios";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-const AI_URL = process.env.NEXT_PUBLIC_AI_URL || "http://localhost:8000";
+const cleanUrl = (url) => {
+  if (!url) return "";
+  let cleaned = url.replace(/['"]/g, "").trim();
+  if (cleaned && !cleaned.startsWith("http://") && !cleaned.startsWith("https://")) {
+    cleaned = "https://" + cleaned;
+  }
+  return cleaned;
+};
+
+const BACKEND_URL = cleanUrl(process.env.NEXT_PUBLIC_BACKEND_URL) || "http://localhost:5000";
+const AI_URL = cleanUrl(process.env.NEXT_PUBLIC_AI_URL) || "http://localhost:8000";
 
 export async function fetchZoneForecastData(lat, lon) {
   const marineUrl = "https://marine-api.open-meteo.com/v1/marine";

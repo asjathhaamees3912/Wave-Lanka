@@ -11,8 +11,17 @@ export default function ZoneDetailPage() {
   const router = useRouter();
   const { id } = router.query;
 
+  const cleanUrl = (url) => {
+    if (!url) return "";
+    let cleaned = url.replace(/['"]/g, "").trim();
+    if (cleaned && !cleaned.startsWith("http://") && !cleaned.startsWith("https://")) {
+      cleaned = "https://" + cleaned;
+    }
+    return cleaned;
+  };
+
   const backendBase =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+    cleanUrl(process.env.NEXT_PUBLIC_BACKEND_URL) || "http://localhost:5000";
 
   const [zones, setZones] = useState([]);
   const [marine, setMarine] = useState(null);
