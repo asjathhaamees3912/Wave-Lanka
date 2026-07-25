@@ -10,20 +10,28 @@ const meteoRoutes = require('./routes/meteoRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const cleanOrigin = (url) => {
+  if (!url) return null;
+  return url.replace(/['"]/g, "").trim().replace(/\/$/, "");
+};
+
 const allowedOrigins = [
-  process.env.ALLOWED_ORIGIN,
+  cleanOrigin(process.env.ALLOWED_ORIGIN),
   'http://localhost:3000',
-].filter(Boolean)
+].filter(Boolean);
 
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true)
+    const cleanedOrigin = origin ? origin.replace(/\/$/, "") : null;
+    console.log(`[CORS] Request from origin: "${origin}". Allowed:`, allowedOrigins);
+    if (!origin || allowedOrigins.includes(cleanedOrigin)) {
+      callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'))
+      console.warn(`[CORS] Blocked origin: "${origin}"`);
+      callback(new Error('Not allowed by CORS'));
     }
   }
-}))
+}));
 app.use(express.json());
 
 app.get('/', (_req, res) => {
