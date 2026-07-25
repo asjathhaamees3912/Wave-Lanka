@@ -1,0 +1,5 @@
+requirements.txt
+*.py
+__pycache__/
+AI/
+backend/
