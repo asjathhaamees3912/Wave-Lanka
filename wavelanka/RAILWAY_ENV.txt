@@ -1,0 +1,21 @@
+# Railway Variables — paste into each service (Settings → Variables)
+# No quotes. No trailing slash.
+
+# ========== BACKEND (gregarious-motivation-production) ==========
+ALLOWED_ORIGIN=https://wavelanka.up.railway.app
+FRONTEND_URL=https://wavelanka.up.railway.app
+
+# ========== AI (wave-lanka-production) ==========
+BACKEND_URL=https://gregarious-motivation-production.up.railway.app
+AI_BASE_URL=https://wave-lanka-production.up.railway.app
+# Also set GEMINI_API_KEY or GOOGLE_API_KEY_A
+
+# ========== FRONTEND (wavelanka) ==========
+# Must Redeploy AFTER setting these (NEXT_PUBLIC_* are baked at build time)
+NEXT_PUBLIC_BACKEND_URL=https://gregarious-motivation-production.up.railway.app
+NEXT_PUBLIC_AI_URL=https://wave-lanka-production.up.railway.app
+
+# ========== ROOT DIRECTORIES ==========
+# Backend  → wavelanka/backend
+# AI       → wavelanka/AI
+# Frontend → wavelanka/frontend

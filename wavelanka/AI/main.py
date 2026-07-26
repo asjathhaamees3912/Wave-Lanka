@@ -27,12 +27,6 @@ import requests
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.tools import Tool
-from langchain_core.messages import HumanMessage
-from langchain.agents import create_agent
-from langgraph.checkpoint.memory import MemorySaver
-
 from tools.marine_tool import get_marine_safety
 from tools.weather_tool import get_weather
 from tools.meteo_tool import get_meteo_advisory
@@ -47,6 +41,10 @@ MODEL_PATH_12H = os.path.join(BASE_DIR, "marine-model", "model_12h.joblib")
 MODEL_PATH_24H = os.path.join(BASE_DIR, "marine-model", "model_24h.joblib")
 FEATURES_PATH_FORECAST = os.path.join(BASE_DIR, "marine-model", "forecast_features.json")
 
+_models_loading = False
+_models_error: Optional[str] = None
+
+
 def clean_url(url: str | None) -> str:
     if not url:
         return ""
@@ -56,6 +54,7 @@ def clean_url(url: str | None) -> str:
     return cleaned
 
 BACKEND_BASE_URL = clean_url(os.getenv("BACKEND_URL", "http://localhost:5000"))
+print(f"[boot] BACKEND_URL={BACKEND_BASE_URL!r} PORT={os.getenv('PORT')!r}")
 
 CLASS_NAMES = ["SAFE", "CAUTION", "DANGEROUS", "DO_NOT_GO"]
 
@@ -157,37 +156,42 @@ async def root() -> Dict[str, str]:
 
 @app.get("/health")
 async def health() -> Dict[str, Any]:
+    # Keep this lightweight so Railway healthchecks pass while models load.
     return {
         "status": "ok",
         "models_loaded": bool(model_6h and model_12h and model_24h and feature_names),
+        "models_loading": _models_loading,
+        "models_error": _models_error,
+        "backend_url": BACKEND_BASE_URL,
         "model_accuracy": MODEL_ACCURACY,
     }
 
 
-@app.on_event("startup")
-async def startup_event():
-    global model_6h, model_12h, model_24h, feature_names
-
-    print("CWD:", os.getcwd())
-    print("BASE_DIR:", BASE_DIR)
+def _load_models() -> None:
+    """Load joblib models in a background thread so uvicorn can bind to PORT first."""
+    global model_6h, model_12h, model_24h, feature_names, _models_loading, _models_error
+    _models_loading = True
+    _models_error = None
     try:
-        print("Files:", os.listdir("."))
-    except Exception as exc:
-        print("Files: <failed to list CWD>", exc)
-    try:
-        print("marine-model files:", os.listdir(os.path.join(BASE_DIR, "marine-model")))
-    except Exception as exc:
-        print("marine-model files: <failed to list>", exc)
+        print("CWD:", os.getcwd())
+        print("BASE_DIR:", BASE_DIR)
+        try:
+            print("Files:", os.listdir("."))
+        except Exception as exc:
+            print("Files: <failed to list CWD>", exc)
+        try:
+            print("marine-model files:", os.listdir(os.path.join(BASE_DIR, "marine-model")))
+        except Exception as exc:
+            print("marine-model files: <failed to list>", exc)
 
-    for label, path in (
-        ("MODEL_PATH_6H", MODEL_PATH_6H),
-        ("MODEL_PATH_12H", MODEL_PATH_12H),
-        ("MODEL_PATH_24H", MODEL_PATH_24H),
-        ("FEATURES_PATH", FEATURES_PATH_FORECAST),
-    ):
-        print(f"{label}: {path} exists={os.path.exists(path)}")
+        for label, path in (
+            ("MODEL_PATH_6H", MODEL_PATH_6H),
+            ("MODEL_PATH_12H", MODEL_PATH_12H),
+            ("MODEL_PATH_24H", MODEL_PATH_24H),
+            ("FEATURES_PATH", FEATURES_PATH_FORECAST),
+        ):
+            print(f"{label}: {path} exists={os.path.exists(path)}")
 
-    try:
         model_6h = joblib.load(MODEL_PATH_6H)
         model_12h = joblib.load(MODEL_PATH_12H)
         model_24h = joblib.load(MODEL_PATH_24H)
@@ -198,8 +202,20 @@ async def startup_event():
         print("   12h model: ready")
         print("   24h model: ready")
     except Exception as exc:
+        _models_error = str(exc)
         print(f"[ERROR] Failed to load ML models: {exc}")
-        raise
+    finally:
+        _models_loading = False
+
+
+@app.on_event("startup")
+async def startup_event():
+    # Do NOT block the event loop / server bind on model I/O.
+    # Railway returns 502 if the process is not listening on $PORT quickly.
+    import threading
+
+    threading.Thread(target=_load_models, name="model-loader", daemon=True).start()
+    print("[boot] Model loading started in background; server is ready for healthchecks")
 
 
 def load_model_and_features():
@@ -539,6 +555,12 @@ SYSTEM_PROMPT = (
 
 
 def build_agent():
+    # Lazy imports so the HTTP server can boot even if LangChain deps fail at runtime.
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain_core.tools import Tool
+    from langchain.agents import create_agent
+    from langgraph.checkpoint.memory import MemorySaver
+
     # Support multiple env keys as fallbacks: GEMINI_API_KEY or GOOGLE_API_KEY_A..E
     env_keys = [os.getenv("GEMINI_API_KEY")]
     env_keys += [os.getenv(k) for k in ("GOOGLE_API_KEY_A", "GOOGLE_API_KEY_B", "GOOGLE_API_KEY_C", "GOOGLE_API_KEY_D", "GOOGLE_API_KEY_E")]
@@ -871,6 +893,8 @@ async def chat_endpoint(req: ChatRequest) -> ChatResponse:
     bucket.append(now)
 
     try:
+        from langchain_core.messages import HumanMessage
+
         result = graph.invoke(
             {"messages": [HumanMessage(content=req.message)]},
             config=config,
@@ -961,6 +985,8 @@ def chat_stream(message: str, session_id: str):
 
     def event_stream():
         try:
+            from langchain_core.messages import HumanMessage
+
             for ev in graph.stream_events({"messages": [HumanMessage(content=message)]}, config=config):
                 # ev is assumed to be dict-like with 'type' and 'data' keys
                 etype = ev.get("type") if isinstance(ev, dict) else getattr(ev, "type", "message")
