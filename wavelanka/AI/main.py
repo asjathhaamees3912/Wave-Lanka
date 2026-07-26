@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import joblib
@@ -39,15 +38,14 @@ from tools.weather_tool import get_weather
 from tools.meteo_tool import get_meteo_advisory
 
 
-BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(BASE_DIR / ".env")
-MARINE_MODEL_DIR = BASE_DIR / "marine-model"
-MODEL_PATH = MARINE_MODEL_DIR / "marine_safety_model.joblib"
-FEATURES_PATH = MARINE_MODEL_DIR / "model_features.json"
-MODEL_6H_PATH = MARINE_MODEL_DIR / "model_6h.joblib"
-MODEL_12H_PATH = MARINE_MODEL_DIR / "model_12h.joblib"
-MODEL_24H_PATH = MARINE_MODEL_DIR / "model_24h.joblib"
-FORECAST_FEATURES_PATH = MARINE_MODEL_DIR / "forecast_features.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+MODEL_PATH = os.path.join(BASE_DIR, "marine-model", "marine_safety_model.joblib")
+FEATURES_PATH = os.path.join(BASE_DIR, "marine-model", "model_features.json")
+MODEL_PATH_6H = os.path.join(BASE_DIR, "marine-model", "model_6h.joblib")
+MODEL_PATH_12H = os.path.join(BASE_DIR, "marine-model", "model_12h.joblib")
+MODEL_PATH_24H = os.path.join(BASE_DIR, "marine-model", "model_24h.joblib")
+FEATURES_PATH_FORECAST = os.path.join(BASE_DIR, "marine-model", "forecast_features.json")
 
 def clean_url(url: str | None) -> str:
     if not url:
@@ -169,21 +167,45 @@ async def health() -> Dict[str, Any]:
 @app.on_event("startup")
 async def startup_event():
     global model_6h, model_12h, model_24h, feature_names
-    model_6h = joblib.load(MODEL_6H_PATH)
-    model_12h = joblib.load(MODEL_12H_PATH)
-    model_24h = joblib.load(MODEL_24H_PATH)
-    with open(FORECAST_FEATURES_PATH, encoding="utf-8") as f:
-        feature_names = json.load(f)
-    print("[SUCCESS] All 3 MarineX predictive models loaded")
-    print("   6h model:  ready")
-    print("   12h model: ready")
-    print("   24h model: ready")
+
+    print("CWD:", os.getcwd())
+    print("BASE_DIR:", BASE_DIR)
+    try:
+        print("Files:", os.listdir("."))
+    except Exception as exc:
+        print("Files: <failed to list CWD>", exc)
+    try:
+        print("marine-model files:", os.listdir(os.path.join(BASE_DIR, "marine-model")))
+    except Exception as exc:
+        print("marine-model files: <failed to list>", exc)
+
+    for label, path in (
+        ("MODEL_PATH_6H", MODEL_PATH_6H),
+        ("MODEL_PATH_12H", MODEL_PATH_12H),
+        ("MODEL_PATH_24H", MODEL_PATH_24H),
+        ("FEATURES_PATH", FEATURES_PATH_FORECAST),
+    ):
+        print(f"{label}: {path} exists={os.path.exists(path)}")
+
+    try:
+        model_6h = joblib.load(MODEL_PATH_6H)
+        model_12h = joblib.load(MODEL_PATH_12H)
+        model_24h = joblib.load(MODEL_PATH_24H)
+        with open(FEATURES_PATH_FORECAST, encoding="utf-8") as f:
+            feature_names = json.load(f)
+        print("[SUCCESS] All 3 MarineX predictive models loaded")
+        print("   6h model:  ready")
+        print("   12h model: ready")
+        print("   24h model: ready")
+    except Exception as exc:
+        print(f"[ERROR] Failed to load ML models: {exc}")
+        raise
 
 
 def load_model_and_features():
-    if not MODEL_PATH.exists():
+    if not os.path.exists(MODEL_PATH):
         raise RuntimeError(f"Model file not found at {MODEL_PATH}")
-    if not FEATURES_PATH.exists():
+    if not os.path.exists(FEATURES_PATH):
         raise RuntimeError(f"Feature list not found at {FEATURES_PATH}")
 
     model = joblib.load(MODEL_PATH)
@@ -781,7 +803,7 @@ async def feedback_endpoint(req: FeedbackRequest) -> Dict[str, Any]:
     if graph is None:
         # fallback: just log to file
         try:
-            with open(BASE_DIR / "feedback.log", "a", encoding="utf-8") as f:
+            with open(os.path.join(BASE_DIR, "feedback.log"), "a", encoding="utf-8") as f:
                 f.write(f"{datetime.utcnow().isoformat()}\t{req.session_id}\t{req.rating}\t{req.comment}\n")
         except Exception:
             pass
@@ -804,7 +826,7 @@ async def feedback_endpoint(req: FeedbackRequest) -> Dict[str, Any]:
     except Exception:
         # best-effort log
         try:
-            with open(BASE_DIR / "feedback.log", "a", encoding="utf-8") as f:
+            with open(os.path.join(BASE_DIR, "feedback.log"), "a", encoding="utf-8") as f:
                 f.write(f"{datetime.utcnow().isoformat()}\t{req.session_id}\t{req.rating}\t{req.comment}\n")
         except Exception:
             pass

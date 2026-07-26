@@ -17,6 +17,11 @@ const cleanOrigin = (url) => {
 
 const allowedOrigins = [
   cleanOrigin(process.env.ALLOWED_ORIGIN),
+  cleanOrigin(process.env.FRONTEND_URL),
+  ...(process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((o) => cleanOrigin(o))
+    .filter(Boolean),
   'http://localhost:3000',
 ].filter(Boolean);
 
