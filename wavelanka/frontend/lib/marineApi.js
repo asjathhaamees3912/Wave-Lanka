@@ -63,8 +63,13 @@ export async function fetchZoneForecastData(lat, lon) {
 
 export async function fetchZoneLagData(zoneId) {
   const url = `${BACKEND_URL}/api/marine/${zoneId}/lag`;
-  const response = await axios.get(url, { timeout: 10000 });
-  return response.data?.data || null;
+  try {
+    const response = await axios.get(url, { timeout: 10000 });
+    return response.data?.data || {};
+  } catch (err) {
+    console.warn("fetchZoneLagData failed, continuing without lag:", err.message);
+    return {};
+  }
 }
 
 export async function postForecastPrediction(payload) {

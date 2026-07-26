@@ -23,17 +23,32 @@ const allowedOrigins = [
     .map((o) => cleanOrigin(o))
     .filter(Boolean),
   'http://localhost:3000',
+  'https://wavelanka.up.railway.app',
 ].filter(Boolean);
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  const cleaned = origin.replace(/\/$/, '');
+  if (allowedOrigins.includes(cleaned) || allowedOrigins.includes('*')) return true;
+  // Allow Railway-hosted frontends without requiring perfect env wiring
+  try {
+    const host = new URL(cleaned).hostname;
+    if (host === 'wavelanka.up.railway.app' || host.endsWith('.up.railway.app')) return true;
+  } catch {
+    return false;
+  }
+  return false;
+}
 
 app.use(cors({
   origin: function(origin, callback) {
-    const cleanedOrigin = origin ? origin.replace(/\/$/, "") : null;
     console.log(`[CORS] Request from origin: "${origin}". Allowed:`, allowedOrigins);
-    if (!origin || allowedOrigins.includes(cleanedOrigin)) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
       console.warn(`[CORS] Blocked origin: "${origin}"`);
-      callback(new Error('Not allowed by CORS'));
+      // Do not pass an Error — that becomes HTTP 500 and breaks browser clients.
+      callback(null, false);
     }
   }
 }));

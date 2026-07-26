@@ -78,7 +78,8 @@ export default function ForecastPage() {
           setForecastLoading(true);
           setForecastError(null);
           try {
-            const lagData = await fetchZoneLagData(zoneId);
+            // Lag is best-effort; AI forecast should still run if lag/CORS fails
+            const lagData = (await fetchZoneLagData(zoneId)) || {};
             const marineHourly = result.marine?.hourly || {};
             const weatherCurrent = result.weather?.current || {};
             const currentIndex = (() => {
@@ -98,23 +99,30 @@ export default function ForecastPage() {
               return bestIdx;
             })();
 
+            const num = (v, fallback = null) => {
+              const n = Number(v);
+              return Number.isFinite(n) ? n : fallback;
+            };
+
             const payload = {
               zone: zoneId,
               current_data: {
-                wave_height: marineHourly.wave_height?.[currentIndex],
-                wave_period: marineHourly.wave_period?.[currentIndex],
-                swell_wave_height: marineHourly.swell_wave_height?.[currentIndex],
-                swell_wave_period: marineHourly.swell_wave_period?.[currentIndex],
-                wind_wave_height: marineHourly.wind_wave_height?.[currentIndex],
-                wind_speed: weatherCurrent.wind_speed_10m,
-                wind_gusts: weatherCurrent.wind_gusts_10m,
-                sea_surface_temperature: marineHourly.sea_surface_temperature?.[currentIndex],
-                weather_code: weatherCurrent.weather_code,
+                wave_height: num(marineHourly.wave_height?.[currentIndex], 1.5),
+                wave_period: num(marineHourly.wave_period?.[currentIndex], 5),
+                swell_wave_height: num(marineHourly.swell_wave_height?.[currentIndex], 0.8),
+                swell_wave_period: num(marineHourly.swell_wave_period?.[currentIndex], 6),
+                wind_wave_height: num(marineHourly.wind_wave_height?.[currentIndex], 0),
+                wind_speed: num(weatherCurrent.wind_speed_10m, 15),
+                wind_gusts: num(weatherCurrent.wind_gusts_10m, 0),
+                sea_surface_temperature: num(marineHourly.sea_surface_temperature?.[currentIndex], 28),
+                weather_code: num(weatherCurrent.weather_code, 0),
               },
               lag_data: {
-                ...lagData,
-                wind_speed_3h_ago: weatherCurrent.wind_speed_10m,
-                wind_speed_6h_ago: weatherCurrent.wind_speed_10m,
+                wave_height_3h_ago: num(lagData.wave_height_3h_ago, num(marineHourly.wave_height?.[currentIndex], 1.5)),
+                wave_height_6h_ago: num(lagData.wave_height_6h_ago, num(marineHourly.wave_height?.[currentIndex], 1.5)),
+                wind_speed_3h_ago: num(lagData.wind_speed_3h_ago, num(weatherCurrent.wind_speed_10m, 15)),
+                wind_speed_6h_ago: num(lagData.wind_speed_6h_ago, num(weatherCurrent.wind_speed_10m, 15)),
+                swell_3h_ago: num(lagData.swell_3h_ago, num(marineHourly.swell_wave_height?.[currentIndex], 0.8)),
               },
             };
 
