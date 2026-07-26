@@ -69,9 +69,20 @@ export async function fetchZoneLagData(zoneId) {
 
 export async function postForecastPrediction(payload) {
   const url = `${AI_URL}/predict/forecast`;
-  const response = await axios.post(url, payload, {
+  // Strip null/undefined so FastAPI Dict[str, float] validation does not 422
+  const sanitize = (obj = {}) =>
+    Object.fromEntries(
+      Object.entries(obj).filter(([, v]) => v !== null && v !== undefined && !Number.isNaN(Number(v)))
+        .map(([k, v]) => [k, Number(v)])
+    );
+  const body = {
+    ...payload,
+    current_data: sanitize(payload.current_data),
+    lag_data: sanitize(payload.lag_data),
+  };
+  const response = await axios.post(url, body, {
     headers: { "Content-Type": "application/json" },
-    timeout: 10000,
+    timeout: 20000,
   });
   return response.data;
 }

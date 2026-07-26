@@ -81,23 +81,30 @@ model_24h = None
 feature_names: List[str] = []
 
 ZONE_ALIASES = {
-    "bay_of_bengal": "east",
-    "bay-of-bengal": "east",
-    "east": "east",
-    "south": "south",
-    "indian_ocean_south": "south",
-    "gulf_of_mannar": "west",
-    "west": "west",
-    "palk_strait": "north",
-    "north": "north",
-    "lakshadweep_sea": "southwest",
-    "southwest": "southwest",
+    "bay_of_bengal": "bay-of-bengal",
+    "bay-of-bengal": "bay-of-bengal",
+    "east": "bay-of-bengal",
+    "south": "indian-ocean",
+    "indian_ocean_south": "indian-ocean",
+    "indian-ocean": "indian-ocean",
+    "indian_ocean": "indian-ocean",
+    "gulf_of_mannar": "gulf-of-mannar",
+    "gulf-of-mannar": "gulf-of-mannar",
+    "west": "gulf-of-mannar",
+    "palk_strait": "palk-strait",
+    "palk-strait": "palk-strait",
+    "north": "palk-strait",
+    "lakshadweep_sea": "lakshadweep-sea",
+    "lakshadweep-sea": "lakshadweep-sea",
+    "southwest": "lakshadweep-sea",
 }
 
 
 def normalize_zone_id(zone: str) -> str:
-    key = zone.strip().lower()
-    return ZONE_ALIASES.get(key, key)
+    """Map friendly aliases (east/south/...) to backend zone ids (bay-of-bengal/...)."""
+    key = zone.strip().lower().replace(" ", "-").replace("_", "-")
+    # Also try underscore form for legacy keys
+    return ZONE_ALIASES.get(key) or ZONE_ALIASES.get(key.replace("-", "_")) or key
 
 
 class PredictRequest(BaseModel):
@@ -116,8 +123,8 @@ class PredictResponse(BaseModel):
 
 class ForecastRequest(BaseModel):
     zone: str
-    current_data: Dict[str, float]
-    lag_data: Dict[str, float]
+    current_data: Dict[str, Optional[float]] = {}
+    lag_data: Dict[str, Optional[float]] = {}
 
 
 class ChatRequest(BaseModel):
@@ -688,18 +695,18 @@ def _explain_safety_term_if_asked(message: str) -> Optional[str]:
 
 def _infer_zone_from_message(message: str) -> str:
     m = message.lower()
-    # simple keyword-based inference
-    if "bay of bengal" in m or "bengal" in m or "trincom" in m:
-        return "east"
-    if "gulf of mannar" in m or "mannar" in m or "negombo" in m:
-        return "west"
+    # Return backend zone ids so tools/backend calls never 404
+    if "bay of bengal" in m or "bengal" in m or "trincom" in m or "kalmunai" in m or "batticaloa" in m:
+        return "bay-of-bengal"
+    if "gulf of mannar" in m or "mannar" in m:
+        return "gulf-of-mannar"
     if "palk" in m or "jaffna" in m:
-        return "north"
-    if "lakshadweep" in m or "colombo" in m:
-        return "southwest"
+        return "palk-strait"
+    if "lakshadweep" in m or "colombo" in m or "negombo" in m:
+        return "lakshadweep-sea"
     if "south" in m or "galle" in m or "matara" in m:
-        return "south"
-    return "east"
+        return "indian-ocean"
+    return "bay-of-bengal"
 
 
 GREETING_PATTERNS = [

@@ -54,7 +54,7 @@ app.get('/', (_req, res) => {
       safetyAll: 'GET /api/safety/all',
       meteo: 'GET /api/meteo',
     },
-    zones: ['east', 'south', 'west', 'north', 'southwest'],
+    zones: ['bay-of-bengal', 'indian-ocean', 'gulf-of-mannar', 'palk-strait', 'lakshadweep-sea'],
   });
 });
 

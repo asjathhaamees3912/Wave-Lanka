@@ -13,14 +13,20 @@ const AI_URL = cleanUrl(process.env.NEXT_PUBLIC_AI_URL) || "http://localhost:800
 const BACKEND_URL = cleanUrl(process.env.NEXT_PUBLIC_BACKEND_URL) || "http://localhost:5000";
 
 const ZONE_KEYWORDS = [
-  { zone: "east", keywords: ["trincom", "batticaloa", "bengal", "east coast", "kalmunai", "ampara", "arugam", "nilaveli"] },
-  { zone: "south", keywords: ["galle", "matara", "hambantota", "tangalle", "mirissa", "weligama", "dondra", "south coast", "indian ocean"] },
-  { zone: "west", keywords: ["mannar", "puttalam", "chilaw", "kalpitiya", "gulf of mannar", "west coast", "marawila"] },
-  { zone: "north", keywords: ["jaffna", "mullaitivu", "palk", "point pedro", "north coast", "kilinochchi"] },
-  { zone: "southwest", keywords: ["colombo", "negombo", "kalutara", "hikkaduwa", "beruwala", "bentota", "moratuwa", "lakshadweep", "panadura"] },
+  { zone: "bay-of-bengal", keywords: ["trincom", "batticaloa", "bengal", "east coast", "kalmunai", "ampara", "arugam", "nilaveli"] },
+  { zone: "indian-ocean", keywords: ["galle", "matara", "hambantota", "tangalle", "mirissa", "weligama", "dondra", "south coast", "indian ocean"] },
+  { zone: "gulf-of-mannar", keywords: ["mannar", "puttalam", "chilaw", "kalpitiya", "gulf of mannar", "west coast", "marawila"] },
+  { zone: "palk-strait", keywords: ["jaffna", "mullaitivu", "palk", "point pedro", "north coast", "kilinochchi"] },
+  { zone: "lakshadweep-sea", keywords: ["colombo", "negombo", "kalutara", "hikkaduwa", "beruwala", "bentota", "moratuwa", "lakshadweep", "panadura"] },
 ];
 
 const ZONE_LABELS = {
+  "bay-of-bengal": "Bay of Bengal (East)",
+  "indian-ocean": "Indian Ocean (South)",
+  "gulf-of-mannar": "Gulf of Mannar (West)",
+  "palk-strait": "Palk Strait (North)",
+  "lakshadweep-sea": "Lakshadweep Sea (Southwest)",
+  // legacy short aliases
   east: "Bay of Bengal (East)",
   south: "Indian Ocean (South)",
   west: "Gulf of Mannar (West)",
@@ -35,7 +41,7 @@ function inferZone(message) {
       return entry.zone;
     }
   }
-  return "east";
+  return "bay-of-bengal";
 }
 
 async function fetchSafetyFallback(message, sessionId) {
@@ -91,10 +97,11 @@ export default async function handler(req, res) {
     const aiResp = await axios.post(
       `${AI_URL}/chat`,
       { message: message.trim(), session_id: sid },
-      { timeout: 15000 }
+      { timeout: 45000 }
     );
     return res.status(200).json(aiResp.data);
-  } catch {
+  } catch (err) {
+    console.error("[api/chat] AI service failed:", AI_URL, err.message);
     // Fall back to backend safety API
     const fallback = await fetchSafetyFallback(message.trim(), sid);
     return res.status(200).json(fallback);

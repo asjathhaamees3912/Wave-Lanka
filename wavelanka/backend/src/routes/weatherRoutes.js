@@ -10,7 +10,7 @@ router.get('/weather/:zone', async (req, res) => {
     if (!zone) {
       return res.status(404).json({
         error: 'Zone not found',
-        message: `No zone matching "${req.params.zone}". Valid zone ids: east, south, west, north, southwest`,
+        message: `No zone matching "${req.params.zone}". Valid zone ids: bay-of-bengal, indian-ocean, gulf-of-mannar, palk-strait, lakshadweep-sea (aliases: east, south, west, north, southwest)`,
       });
     }
 

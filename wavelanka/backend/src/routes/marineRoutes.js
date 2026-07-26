@@ -8,7 +8,7 @@ const router = express.Router();
 function zoneNotFound(res, zoneId) {
   return res.status(404).json({
     error: 'Zone not found',
-    message: `No zone matching "${zoneId}". Valid zone ids: east, south, west, north, southwest`,
+    message: `No zone matching "${zoneId}". Valid zone ids: bay-of-bengal, indian-ocean, gulf-of-mannar, palk-strait, lakshadweep-sea (aliases: east, south, west, north, southwest)`,
   });
 }
 
